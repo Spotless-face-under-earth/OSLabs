@@ -176,8 +176,9 @@ debug: $(UCOREIMG) $(SWAPIMG) $(SFSIMG)
 		-device loader,file=$(UCOREIMG),addr=0x80200000\
 		-s -S
 
+#原指令是gdb: riscv64-unknown-elf-gdb，但是我在gcc-linux-unknown-elf v10.2的系统下找不到linux-unknown-elf-gdb,所以使用通用的gdb-multiarch进行调试
 gdb:
-	riscv64-unknown-elf-gdb \
+	gdb-multiarch \
     -ex 'file bin/kernel' \
     -ex 'set arch riscv:rv64' \
     -ex 'target remote localhost:1234'

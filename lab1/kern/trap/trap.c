@@ -121,8 +121,6 @@ void interrupt_handler(struct trapframe *tf) {
 	    }
 	    if(num==10)
 	    {
-		    num=0;
-		    ticks=0;
 		    sbi_shutdown();
 	    }
 
@@ -177,7 +175,7 @@ void exception_handler(struct trapframe *tf) {
             */
 	    cprintf("Exception type:Illegal instruction\n");
             cprintf("Illegal instruction caught at %p\n", tf->epc);
-            tf->epc += 2;
+            tf->epc += 4;
             break;
         case CAUSE_MISALIGNED_LOAD:
             break;
