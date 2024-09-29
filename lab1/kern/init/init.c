@@ -33,6 +33,8 @@ int kern_init(void) {
 
     intr_enable();  // enable irq interrupt
     
+    __asm__ __volatile__("mret"); // 
+    __asm__ __volatile__("ebreak"); // 断点异常
     while (1)
         ;
 }
