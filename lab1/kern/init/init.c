@@ -34,8 +34,8 @@ int kern_init(void) {
     intr_enable();  // enable irq interrupt
     
 
-    //__asm__ __volatile__("mret"); // 非法指令
-    //__asm__ __volatile__("ebreak"); // 断点异常
+    __asm__ __volatile__("mret"); // 非法指令
+    __asm__ __volatile__("ebreak"); // 断点异常
 
  
     while (1)
