@@ -91,7 +91,7 @@ best_fit_init_memmap(struct Page *base, size_t n)
     {
         assert(PageReserved(p)); // 确保内存块是保留的
 
-        /*LAB2 EXERCISE 2: 2111454*/
+        /*LAB2 EXERCISE 2: 2212785*/
         // 清空当前页框的标志和属性信息，并将页框的引用计数设置为0
         // 结构体Page的相关定义见memlayout.h
         // 新添加代码
@@ -117,7 +117,7 @@ best_fit_init_memmap(struct Page *base, size_t n)
         while ((le = list_next(le)) != &free_list)
         {
             struct Page *page = le2page(le, page_link);
-            /*LAB2 EXERCISE 2: 2111454*/
+            /*LAB2 EXERCISE 2: 2212785*/
             // 编写代码
             // 1、当base < page时，找到第一个大于base的页，将base插入到它前面，并退出循环
             if (base < page)
@@ -159,7 +159,7 @@ best_fit_alloc_pages(size_t n)
     list_entry_t *le = &free_list; // 从free_list的头部开始查找可用页面
     size_t min_size = nr_free + 1; // 初始化最小连续空闲页框数量
 
-    /*LAB2 EXERCISE 2: 2111454*/
+    /*LAB2 EXERCISE 2: 2212785*/
     // 下面的代码是first-fit的部分代码，请修改下面的代码改为best-fit
     // 遍历空闲链表，查找满足需求的空闲页框
     // 如果找到满足需求的页面，记录该页面以及当前找到的最小连续空闲页框数量
@@ -215,7 +215,7 @@ best_fit_free_pages(struct Page *base, size_t n)
         p->flags = 0;
         set_page_ref(p, 0);
     }
-    /*LAB2 EXERCISE 2: 2111454*/
+    /*LAB2 EXERCISE 2: 2212785*/
     // 编写代码
     // 具体来说就是设置当前页块的属性为释放的页块数、并将当前页块标记为已分配状态、最后增加nr_free的值
 
@@ -255,7 +255,7 @@ best_fit_free_pages(struct Page *base, size_t n)
     if (le != &free_list)
     {
         p = le2page(le, page_link);
-        /*LAB2 EXERCISE 2: 2111454*/
+        /*LAB2 EXERCISE 2: 2212785*/
         // 编写代码
         // 1、判断前面的空闲页块是否与当前页块是连续的，如果是连续的，则将当前页块合并到前面的空闲页块中
         // 2、首先更新前一个空闲页块的大小，加上当前页块的大小
