@@ -49,6 +49,8 @@ add_executable(lab3
         kern/mm/swap_clock.h
         kern/mm/swap_fifo.c
         kern/mm/swap_fifo.h
+        kern/mm/swap_lru.c
+        kern/mm/swap_lru.h
         kern/mm/vmm.c
         kern/mm/vmm.h
         kern/sync/sync.h
