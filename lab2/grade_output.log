@@ -1,0 +1,6 @@
+tools/grade.sh: 147: exec: qemu-system-riscv64: not found
+<<<<<<<<<<<<<<< here_run_check <<<<<<<<<<<<<<<<<<
+  -check physical_memory_map_information:    no $qemu_out
+  -check_best_fit:                           no $qemu_out
+  -check ticks:                              no $qemu_out
+Total Score: 0/30

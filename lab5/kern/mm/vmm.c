@@ -209,6 +209,7 @@ dup_mmap(struct mm_struct *to, struct mm_struct *from) {
     return 0;
 }
 
+// exit_mmap - free all vma & page table for a mm
 void
 exit_mmap(struct mm_struct *mm) {
     assert(mm != NULL && mm_count(mm) == 0);
@@ -458,6 +459,22 @@ do_pgfault(struct mm_struct *mm, uint_t error_code, uintptr_t addr) {
             //map of phy addr <--->
             //logical addr
             //(3) make the page swappable.
+            int r = swap_in(mm, addr, &page);//swap_in将磁盘页的内容读入这个内存页
+            
+            if (r != 0) {
+                cprintf("swap_in in do_pgfault failed\n");
+                goto failed;
+            }
+
+            r = page_insert(mm->pgdir, page, addr, perm);//建立一个Page的phy addr与线性addr la的映射
+
+            if (r != 0) {
+                cprintf("page_insert in do_pgfault failed\n");
+                goto failed;
+            }
+
+            swap_map_swappable(mm, addr, page, 1);//设置页面可交换，参数mm是进程的mm_struct结构，addr是缺页的线性地址，page是缺页的物理页，flags是交换标志，1表示可交换，0表示不可交换
+
             page->pra_vaddr = addr;
         } else {
             cprintf("no swap_init_ok but ptep is %x, failed\n", *ptep);
@@ -495,4 +512,3 @@ user_mem_check(struct mm_struct *mm, uintptr_t addr, size_t len, bool write) {
     }
     return KERN_ACCESS(addr, addr + len);
 }
-
