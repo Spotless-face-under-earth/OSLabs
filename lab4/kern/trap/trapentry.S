@@ -112,5 +112,6 @@ __trapret:
     .globl forkrets
 forkrets:
     # set stack to this new process's trapframe
+    # 在初始化时把上下文的ra寄存器设定成了forkret函数的入口，所以这里会返回到forkret函数
     move sp, a0
     j __trapret

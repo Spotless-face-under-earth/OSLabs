@@ -103,7 +103,21 @@ alloc_proc(void) {
      *       char name[PROC_NAME_LEN + 1];               // Process name
      */
 
+    //【提示】在alloc_proc函数的实现中，需要初始化的proc_struct结构中的成员变量至少包括：
+    //state/pid/runs/kstack/need_resched/parent/mm/context/tf/cr3/flags/name。
 
+        proc->state = PROC_UNINIT;                           // 设置进程状态为未初始化
+        proc->pid = -1;                                      // 设置进程ID为-1（还未分配）
+        proc->cr3 = boot_cr3;                                // 设置CR3寄存器的值（页目录基址）
+        proc->runs = 0;                                      // 设置进程运行次数为0
+        proc->kstack = 0;                                    // 设置内核栈地址为0（还未分配）
+        proc->need_resched = 0;                              // 设置不需要重新调度
+        proc->parent = NULL;                                 // 设置父进程为空
+        proc->mm = NULL;                                     // 设置内存管理字段为空
+        memset(&(proc->context), 0, sizeof(struct context)); // 初始化上下文信息为0
+        proc->tf = NULL;                                     // 设置trapframe为空
+        proc->flags = 0;                                     // 设置进程标志为0
+        memset(proc->name, 0, PROC_NAME_LEN);                // 初始化进程名为0
     }
     return proc;
 }
@@ -172,7 +186,23 @@ proc_run(struct proc_struct *proc) {
         *   lcr3():                   Modify the value of CR3 register
         *   switch_to():              Context switching between two processes
         */
-       
+        // 定义用于保存中断状态的变量
+        bool intr_flag;
+        // 记录当前进程和即将运行的进程
+        struct proc_struct *prev = current, *next = proc;
+
+        // 禁用中断以保护上下文切换过程
+        local_intr_save(intr_flag);
+        {
+            // 将当前进程更新为proc
+            current = proc;
+            // 加载新进程的页目录表到CR3寄存器并切换地址空间
+            lcr3(next->cr3);
+            // 执行上下文切换，切换到新进程
+            switch_to(&(prev->context), &(next->context));
+        }
+        // 恢复之前的中断状态
+        local_intr_restore(intr_flag);
     }
 }
 
@@ -249,14 +279,17 @@ copy_mm(uint32_t clone_flags, struct proc_struct *proc) {
 //             - setup the kernel entry point and stack of process
 static void
 copy_thread(struct proc_struct *proc, uintptr_t esp, struct trapframe *tf) {
+    //在上面分配的内核栈上分配出一片空间来保存trapframe
     proc->tf = (struct trapframe *)(proc->kstack + KSTACKSIZE - sizeof(struct trapframe));
     *(proc->tf) = *tf;
 
-    // Set a0 to 0 so a child process knows it's just forked
-    proc->tf->gpr.a0 = 0;
+    //将tf中的a0寄存器（返回值）设置为0，说明这个进程是一个子进程
     proc->tf->gpr.sp = (esp == 0) ? (uintptr_t)proc->tf : esp;
 
+    //ra设置为forkret函数的入口
     proc->context.ra = (uintptr_t)forkret;
+
+    //把tf放在上下文的栈顶
     proc->context.sp = (uintptr_t)(proc->tf);
 }
 
@@ -291,13 +324,32 @@ do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf) {
      *   nr_process:   the number of process set
      */
 
-    //    1. call alloc_proc to allocate a proc_struct
-    //    2. call setup_kstack to allocate a kernel stack for child process
-    //    3. call copy_mm to dup OR share mm according clone_flag
-    //    4. call copy_thread to setup tf & context in proc_struct
-    //    5. insert proc_struct into hash_list && proc_list
-    //    6. call wakeup_proc to make the new child process RUNNABLE
-    //    7. set ret vaule using child proc's pid
+    // 1. 调用alloc_proc来分配一个proc_struct
+    if ((proc = alloc_proc()) == NULL)
+        goto fork_out;
+    // 2. 调用setup_kstack为子进程分配内核栈
+    proc->parent = current; // 设置子进程的父进程为当前进程
+    if (setup_kstack(proc))
+        goto bad_fork_cleanup_kstack;
+    // 3. 调用copy_mm根据clone_flag来复制或共享内存
+    if (copy_mm(clone_flags, proc))
+        goto bad_fork_cleanup_proc;
+    // 4. 调用copy_thread来设置子进程的tf和context
+    copy_thread(proc, stack, tf);
+    // 5. 将新进程添加到进程列表和哈希表中
+    bool intr_flag;
+    local_intr_save(intr_flag); // 禁用中断
+    {
+        proc->pid = get_pid();                    // 为子进程分配一个唯一的进程ID
+        hash_proc(proc);                          // 将新进程添加到哈希表中
+        list_add(&proc_list, &(proc->list_link)); // 将新进程添加到进程列表中
+    }
+    local_intr_restore(intr_flag); // 恢复中断
+    // 6. 调用wakeup_proc使新的子进程变为可运行状态
+    wakeup_proc(proc);
+    // 7. 使用子进程的pid作为返回值
+    ret = proc->pid;
+
 
     
 

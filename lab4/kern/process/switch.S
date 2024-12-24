@@ -2,6 +2,8 @@
 
 .text
 # void switch_to(struct proc_struct* from, struct proc_struct* to)
+# a0指向原进程，a1指向目的进程
+# 调换被调用者保存寄存器即可
 .globl switch_to
 switch_to:
     # save from's registers

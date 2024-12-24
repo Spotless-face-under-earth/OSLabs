@@ -39,11 +39,14 @@ struct pushregs {
 };
 
 struct trapframe {
-    struct pushregs gpr;
+    struct pushregs gpr;//一大堆寄存器
     uintptr_t status;
-    uintptr_t epc;
-    uintptr_t badvaddr;
-    uintptr_t cause;
+    // SSTATUS_SPP：Supervisor Previous Privilege（设置为 supervisor 模式，因为这是一个内核线程）
+    // SSTATUS_SPIE：Supervisor Previous Interrupt Enable（设置为启用中断，因为这是一个内核线程）
+    // SSTATUS_SIE：Supervisor Interrupt Enable（设置为禁用中断，因为我们不希望该线程被中断）
+    uintptr_t epc;//入口点
+    uintptr_t badvaddr;//记录导致异常的地址；
+    uintptr_t cause;//记录中断发生的原因，还会记录该中断是不是一个外部中断；
 };
 
 void trap(struct trapframe *tf);

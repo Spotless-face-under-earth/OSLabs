@@ -16,8 +16,8 @@ enum proc_state {
 };
 
 struct context {
-    uintptr_t ra;
-    uintptr_t sp;
+    uintptr_t ra;//return addr 记录返回地址
+    uintptr_t sp;//stack pointer 栈指针
     uintptr_t s0;
     uintptr_t s1;
     uintptr_t s2;
